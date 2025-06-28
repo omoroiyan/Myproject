@@ -1,5 +1,5 @@
-# JobHunt
-For job hunting
+# Myproject
+
 
 The programs 'Saikoro Koro for 4 Players V2' and 'DiceWars (5)' were used for a dice-rolling game project. I was utilizing these on Google Colab to implement and train an AI with reinforcement learning.
 
