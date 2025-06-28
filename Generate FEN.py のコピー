@@ -1,0 +1,128 @@
+def generate_fen_from_code():
+    """
+    コード内で定義された駒の配置からFEN形式を生成
+    """
+    # 各マスの駒を個別に設定
+    a1 = "R"  # 白のルーク
+    a2 = "N"  # 白のナイト
+    a3 = "X"  # 空のマス
+    a4 = "X"
+    a5 = "X"
+    a6 = "X"
+    a7 = "P"  # 白のポーン
+    a8 = "R"  # 白のルーク
+
+    b1 = "N"  # 白のナイト
+    b2 = "P"  # 白のポーン
+    b3 = "X"
+    b4 = "X"
+    b5 = "X"
+    b6 = "X"
+    b7 = "P"
+    b8 = "N"
+
+    c1 = "B"  # 白のビショップ
+    c2 = "P"
+    c3 = "X"
+    c4 = "X"
+    c5 = "X"
+    c6 = "X"
+    c7 = "P"
+    c8 = "B"
+
+    d1 = "Q"  # 白のクイーン
+    d2 = "P"
+    d3 = "X"
+    d4 = "X"
+    d5 = "X"
+    d6 = "X"
+    d7 = "P"
+    d8 = "Q"
+
+    e1 = "K"  # 白のキング
+    e2 = "P"
+    e3 = "X"
+    e4 = "X"
+    e5 = "X"
+    e6 = "X"
+    e7 = "P"
+    e8 = "K"
+
+    f1 = "B"
+    f2 = "P"
+    f3 = "X"
+    f4 = "X"
+    f5 = "X"
+    f6 = "X"
+    f7 = "P"
+    f8 = "B"
+
+    g1 = "N"
+    g2 = "P"
+    g3 = "X"
+    g4 = "X"
+    g5 = "X"
+    g6 = "X"
+    g7 = "P"
+    g8 = "N"
+
+    h1 = "R"
+    h2 = "P"
+    h3 = "X"
+    h4 = "X"
+    h5 = "X"
+    h6 = "X"
+    h7 = "P"
+    h8 = "R"
+
+    # 盤面の駒を辞書に格納
+    piece_positions = {
+        "a1": a1, "a2": a2, "a3": a3, "a4": a4, "a5": a5, "a6": a6, "a7": a7, "a8": a8,
+        "b1": b1, "b2": b2, "b3": b3, "b4": b4, "b5": b5, "b6": b6, "b7": b7, "b8": b8,
+        "c1": c1, "c2": c2, "c3": c3, "c4": c4, "c5": c5, "c6": c6, "c7": c7, "c8": c8,
+        "d1": d1, "d2": d2, "d3": d3, "d4": d4, "d5": d5, "d6": d6, "d7": d7, "d8": d8,
+        "e1": e1, "e2": e2, "e3": e3, "e4": e4, "e5": e5, "e6": e6, "e7": e7, "e8": e8,
+        "f1": f1, "f2": f2, "f3": f3, "f4": f4, "f5": f5, "f6": f6, "f7": f7, "f8": f8,
+        "g1": g1, "g2": g2, "g3": g3, "g4": g4, "g5": g5, "g6": g6, "g7": g7, "g8": g8,
+        "h1": h1, "h2": h2, "h3": h3, "h4": h4, "h5": h5, "h6": h6, "h7": h7, "h8": h8
+    }
+
+    # FEN形式を生成
+    return generate_fen(piece_positions)
+
+
+def generate_fen(piece_positions):
+    """
+    駒の位置情報を元にFEN形式を生成する
+    """
+    board = [["1"] * 8 for _ in range(8)]
+
+    for position, piece in piece_positions.items():
+        file = ord(position[0]) - ord("a")
+        rank = 8 - int(position[1])
+        board[rank][file] = piece if piece.upper() != "X" else "1"
+
+    fen_rows = []
+    for row in board:
+        fen_row = ""
+        empty_count = 0
+        for cell in row:
+            if cell == "1":
+                empty_count += 1
+            else:
+                if empty_count > 0:
+                    fen_row += str(empty_count)
+                    empty_count = 0
+                fen_row += cell
+        if empty_count > 0:
+            fen_row += str(empty_count)
+        fen_rows.append(fen_row)
+
+    fen_board = "/".join(fen_rows)
+    return f"{fen_board} w - - 0 1"
+
+
+if __name__ == "__main__":
+    # FEN形式を生成して出力
+    fen = generate_fen_from_code()
+    print(f"Generated FEN: {fen}")

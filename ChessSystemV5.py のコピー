@@ -1,0 +1,203 @@
+import chess
+import chess.engine
+
+
+class ChessAI:
+    def __init__(self, ai_strength=1, engine_path="D:\\stockfish\\stockfish-windows-x86-64-sse41-popcnt.exe"):
+        """
+        AIの初期化
+        ai_strength: 1~10 (Stockfishの思考深さで強さを調整)
+        engine_path: Stockfishエンジンの実行ファイルのパス
+        """
+        self.board = chess.Board()
+        self.ai_strength = ai_strength
+        self.engine_path = engine_path
+        self.engine = chess.engine.SimpleEngine.popen_uci(self.engine_path)
+        self.board_colors = []  # 盤面の色情報を保持
+        self.extra_moves = 0  # 追加行動回数を記録
+
+    def __del__(self):
+        """エンジンの終了処理"""
+        self.engine.quit()
+
+    def setup_board_colors(self, board_data):
+        """
+        盤面の色を設定
+        B: 黒いマス, W: 白いマス
+        """
+        rows = board_data.split("/")
+        self.board_colors = []
+        for row in rows:
+            self.board_colors.append([char for char in row])
+
+    def is_same_color(self, square):
+        """
+        駒の色と盤面の色が一致するか確認
+        square: チェス盤の座標 (0-63)
+        """
+        piece = self.board.piece_at(square)
+        if not piece:
+            return False
+
+        # 駒の色（True: 白, False: 黒）
+        piece_color = piece.color
+
+        # 盤面の色（B: 黒, W: 白）
+        file = chess.square_file(square)
+        rank = chess.square_rank(square)
+        square_color = self.board_colors[7 - rank][file]
+
+        # 駒が白かつ盤面が白（W） or 駒が黒かつ盤面が黒（B）の場合
+        return (piece_color and square_color == 'W') or (not piece_color and square_color == 'B')
+
+    def setup_pieces(self, fen):
+        """
+        FEN形式を使用してチェス盤の初期配置を設定する
+        """
+        try:
+            self.board.set_fen(fen)
+            print("Board setup complete!")
+        except ValueError as e:
+            print(f"Invalid FEN string: {fen}. Error: {e}")
+
+    def display_board(self):
+        """現在のチェス盤をターミナルに表示"""
+        print(self.board)
+        print(f"FEN: {self.board.fen()}")
+        print("")
+
+    def make_ai_move(self):
+        """
+        Stockfishエンジンを使用してAIの指し手を計算して実行。
+        盤面の色と駒の色が一致する場合、追加で1回行動。
+        """
+        if self.board.is_game_over():
+            return None
+
+        depth = max(1, min(self.ai_strength + 5, 20))
+        try:
+            # 通常の指し手
+            result = self.engine.play(self.board, chess.engine.Limit(depth=depth))
+            self.board.push(result.move)
+
+            # 追加行動の判定
+            if self.is_same_color(result.move.to_square):
+                print("Extra move granted to AI due to matching piece and square color!")
+                self.extra_moves += 1  # 2回行動の記録
+                result = self.engine.play(self.board, chess.engine.Limit(depth=depth))
+                self.board.push(result.move)
+
+            return result.move
+        except Exception as e:
+            print(f"Error during AI move: {e}")
+            return None
+
+    def calculate_win_probability(self):
+        """
+        Stockfishエンジンを使用して白と黒の勝率を計算
+        """
+        if self.board.is_game_over():
+            return 0, 0
+
+        try:
+            info = self.engine.analyse(self.board, chess.engine.Limit(depth=15))
+            score = info["score"].relative  # 現在のプレイヤー視点の評価値
+
+            if score.is_mate():
+                if score.mate() > 0:
+                    return 100, 0  # 白の勝率100%
+                else:
+                    return 0, 100  # 黒の勝率100%
+            else:
+                centipawn = score.score()
+                white_percentage = max(0, min(100, 50 + centipawn / 10))
+                black_percentage = 100 - white_percentage
+                return round(white_percentage, 2), round(black_percentage, 2)
+        except Exception as e:
+            print(f"Error during win probability calculation: {e}")
+            return 50, 50
+
+    def is_game_over(self):
+        """
+        ゲームの終了状態をチェック
+        """
+        return self.board.is_game_over()
+
+
+def player_vs_ai(ai_strength=10, engine_path="D:\\stockfish\\stockfish-windows-x86-64-sse41-popcnt.exe"):
+    print("Player vs AI Chess Match!")
+    ai = ChessAI(ai_strength=ai_strength, engine_path=engine_path)
+
+    # 盤面の色を設定
+    board_data = "BWWWWWWW/WWWWWWWW/BWWWBWBW/BWWWWWBW/BWWWWWBW/BBWWBWWB/BBWWWWWW/BWWWWWWW"
+    ai.setup_board_colors(board_data)
+
+    # 駒の初期配置 (FEN形式)
+    piece_placement = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+    ai.setup_pieces(piece_placement)
+
+    # 初期配置の表示
+    print("Initial board:")
+    ai.display_board()
+
+    player_extra_moves = 0  # プレイヤーの追加行動
+    while not ai.is_game_over():
+        # プレイヤーの手番
+        print("Your turn!")
+        legal_moves = list(ai.board.legal_moves)
+        print(f"Legal moves: {[move.uci() for move in legal_moves]}")
+
+        player_move = input("Enter your move (e.g., e2e4): ").strip()
+        if player_move not in [move.uci() for move in legal_moves]:
+            print("Invalid move. Try again.")
+            continue
+
+        ai.board.push(chess.Move.from_uci(player_move))
+        ai.display_board()
+
+        # 勝率を計算
+        white_percentage, black_percentage = ai.calculate_win_probability()
+        print(f"Win Probability -> White: {white_percentage}% | Black: {black_percentage}%")
+
+        # プレイヤーの追加行動
+        if ai.is_same_color(chess.Move.from_uci(player_move).to_square):
+            print("Extra move granted due to matching piece and square color!")
+            player_extra_moves += 1
+            player_move = input("Enter your extra move (e.g., e2e4): ").strip()
+            if player_move in [move.uci() for move in legal_moves]:
+                ai.board.push(chess.Move.from_uci(player_move))
+                ai.display_board()
+            else:
+                print("Invalid move for extra action.")
+
+        if ai.is_game_over():
+            break
+
+        # AIの手番
+        print("AI is thinking...")
+        ai_move = ai.make_ai_move()
+        if ai_move:
+            print(f"AI moved: {ai.board.piece_at(ai_move.to_square)} from {ai_move.uci()[:2]} to {ai_move.uci()[2:]}")
+        ai.display_board()
+
+    # 結果を表示
+    print("\nGame Over!")
+    print(f"Player extra moves: {player_extra_moves}")
+    print(f"AI extra moves: {ai.extra_moves}")
+    if ai.board.is_checkmate():
+        winner = "Player" if ai.board.turn else "AI"
+        print(f"Checkmate! {winner} wins!")
+    elif ai.board.is_stalemate():
+        print("Result: Stalemate (Draw)")
+    elif ai.board.is_insufficient_material():
+        print("Result: Insufficient material (Draw)")
+    elif ai.board.is_seventyfive_moves():
+        print("Result: 75-move rule (Draw)")
+    elif ai.board.is_fivefold_repetition():
+        print("Result: Fivefold repetition avoided!")
+    else:
+        print("Result: Unknown (Draw or another rule)")
+
+
+if __name__ == "__main__":
+    player_vs_ai(ai_strength=10, engine_path="D:\\stockfish\\stockfish-windows-x86-64-sse41-popcnt.exe")

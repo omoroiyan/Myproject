@@ -1,0 +1,157 @@
+def parse_fen_to_board(fen):
+    """
+    FEN形式を解析し、盤面データを生成
+    :param fen: FEN形式の文字列
+    :return: 各マスに対応する辞書形式の盤面データ
+    """
+    # FENの盤面部分を抽出
+    board_data = fen.split()[0]
+    rows = board_data.split("/")
+    board = []
+    
+    # 各行を解析して盤面を構築
+    for row in rows:
+        board_row = []
+        for char in row:
+            if char.isdigit():
+                board_row.extend(["X"] * int(char))  # 数字は空のマスを意味する
+            else:
+                board_row.append(char)
+        board.append(board_row)
+    
+    return board
+
+
+def map_board_to_positions(board):
+    """
+    盤面データを位置情報（a1, b1, ...）にマッピング
+    :param board: 2Dリスト形式の盤面データ
+    :return: 各マスに対応する駒の辞書
+    """
+    positions = {}
+    for rank in range(8):
+        for file in range(8):
+            position = f"{chr(file + 97)}{8 - rank}"  # 例: a1, b2
+            positions[position] = board[rank][file]
+    return positions
+
+
+def reconstruct_fen_from_board(board):
+    """
+    盤面データからFEN形式を生成
+    :param board: 2Dリスト形式の盤面データ
+    :return: FEN形式の文字列
+    """
+    fen_rows = []
+    for row in board:
+        fen_row = ""
+        empty_count = 0
+        for cell in row:
+            if cell == "X":
+                empty_count += 1
+            else:
+                if empty_count > 0:
+                    fen_row += str(empty_count)
+                    empty_count = 0
+                fen_row += cell
+        if empty_count > 0:
+            fen_row += str(empty_count)
+        fen_rows.append(fen_row)
+
+    # FEN形式の盤面を結合
+    fen_board = "/".join(fen_rows)
+    return f"{fen_board} w - - 0 1"
+
+
+if __name__ == "__main__":
+    # FEN形式の入力例
+    fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1"
+
+    # FENを解析して盤面を生成
+    board = parse_fen_to_board(fen)
+
+    # 盤面を位置情報にマッピング
+    piece_positions = map_board_to_positions(board)
+
+    # 各マスを個別に設定
+    a1 = piece_positions["a1"]
+    a2 = piece_positions["a2"]
+    a3 = piece_positions["a3"]
+    a4 = piece_positions["a4"]
+    a5 = piece_positions["a5"]
+    a6 = piece_positions["a6"]
+    a7 = piece_positions["a7"]
+    a8 = piece_positions["a8"]
+
+    b1 = piece_positions["b1"]
+    b2 = piece_positions["b2"]
+    b3 = piece_positions["b3"]
+    b4 = piece_positions["b4"]
+    b5 = piece_positions["b5"]
+    b6 = piece_positions["b6"]
+    b7 = piece_positions["b7"]
+    b8 = piece_positions["b8"]
+
+    c1 = piece_positions["c1"]
+    c2 = piece_positions["c2"]
+    c3 = piece_positions["c3"]
+    c4 = piece_positions["c4"]
+    c5 = piece_positions["c5"]
+    c6 = piece_positions["c6"]
+    c7 = piece_positions["c7"]
+    c8 = piece_positions["c8"]
+
+    d1 = piece_positions["d1"]
+    d2 = piece_positions["d2"]
+    d3 = piece_positions["d3"]
+    d4 = piece_positions["d4"]
+    d5 = piece_positions["d5"]
+    d6 = piece_positions["d6"]
+    d7 = piece_positions["d7"]
+    d8 = piece_positions["d8"]
+
+    e1 = piece_positions["e1"]
+    e2 = piece_positions["e2"]
+    e3 = piece_positions["e3"]
+    e4 = piece_positions["e4"]
+    e5 = piece_positions["e5"]
+    e6 = piece_positions["e6"]
+    e7 = piece_positions["e7"]
+    e8 = piece_positions["e8"]
+
+    f1 = piece_positions["f1"]
+    f2 = piece_positions["f2"]
+    f3 = piece_positions["f3"]
+    f4 = piece_positions["f4"]
+    f5 = piece_positions["f5"]
+    f6 = piece_positions["f6"]
+    f7 = piece_positions["f7"]
+    f8 = piece_positions["f8"]
+
+    g1 = piece_positions["g1"]
+    g2 = piece_positions["g2"]
+    g3 = piece_positions["g3"]
+    g4 = piece_positions["g4"]
+    g5 = piece_positions["g5"]
+    g6 = piece_positions["g6"]
+    g7 = piece_positions["g7"]
+    g8 = piece_positions["g8"]
+
+    h1 = piece_positions["h1"]
+    h2 = piece_positions["h2"]
+    h3 = piece_positions["h3"]
+    h4 = piece_positions["h4"]
+    h5 = piece_positions["h5"]
+    h6 = piece_positions["h6"]
+    h7 = piece_positions["h7"]
+    h8 = piece_positions["h8"]
+
+    # 各マスの値を確認
+    print("Piece Positions:")
+    for position, piece in piece_positions.items():
+        print(f"{position}: {piece}")
+
+    # 必要に応じて FEN に戻す
+    print("\nReconstructed FEN:")
+    reconstructed_fen = reconstruct_fen_from_board(board)
+    print(reconstructed_fen)
